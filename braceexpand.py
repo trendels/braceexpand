@@ -17,16 +17,18 @@ USE_BASH_ALPHABET = False
 # This is consistent with Bash's behaviour.
 int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
+escape_re = re.compile(r'\\(.)')
 
-def braceexpand(pattern):
+def braceexpand(pattern, unescape=False):
     """braceexpand(pattern) --> iterator over generated strings
 
     Returns an iterator over the strings resulting from brace expansion
-    of pattern. This behaves like Brace Expansion in as described in
-    bash(1), with the following limitations:
+    of pattern. When unescape is True, a backslash will cause the
+    following character to be passed through without being interpreted
+    (this will remove one level of quoting from pattern).
 
-    - Literal braces or commas can not be quoted using a backslash
-      ('\\'). A backslash is treated like a regular character.
+    This function behaves like Brace Expansion in as described in
+    bash(1), with the following limitations:
 
     - A (sub-)pattern containing unbalanced braces will not be
       further expanded.
@@ -75,16 +77,19 @@ def braceexpand(pattern):
     >>> list(braceexpand('{1}2,3}'))
     ['{1}2,3}']
 
+    # Set 'unescape' to True if you need to escape braces or commas.
+    >>> list(braceexpand('{1\\\\,2,3}'))
+    ['1\\\\', '2', '3']
+
+    >>> list(braceexpand('{1\\\\,2,3}', unescape=True))
+    ['1,2', '3']
+
     """
-    return (_flatten(t) for t in parse_pattern(pattern))
+    return (_flatten(t, unescape) for t in parse_pattern(pattern, unescape))
 
 
-def parse_pattern(pattern):
+def parse_pattern(pattern, unescape):
     # pattern -> product(*parts)
-    if not ('{' in pattern and '}' in pattern
-            and pattern.index('{') < pattern.rindex('}')):
-        return iter([pattern])
-
     start = 0
     pos = 0
     bracketdepth = 0
@@ -92,7 +97,9 @@ def parse_pattern(pattern):
 
     #print 'pattern:', pattern
     while pos < len(pattern):
-        if pattern[pos] == '{':
+        if unescape and pattern[pos] == '\\':
+            pos += 1
+        elif pattern[pos] == '{':
             if bracketdepth == 0 and pos > start:
                 #print 'literal:', pattern[start:pos]
                 items.append([pattern[start:pos]])
@@ -102,7 +109,7 @@ def parse_pattern(pattern):
             bracketdepth -= 1
             if bracketdepth == 0:
                 #print 'expression:', pattern[start+1:pos]
-                items.append(parse_expression(pattern[start+1:pos]))
+                items.append(parse_expression(pattern[start+1:pos], unescape))
                 start = pos + 1 # skip the closing brace
         pos += 1
 
@@ -116,7 +123,7 @@ def parse_pattern(pattern):
     return product(*items)
 
 
-def parse_expression(expr):
+def parse_expression(expr, unescape):
     int_range_match = int_range_re.match(expr)
     if int_range_match:
         return make_int_range(*int_range_match.groups())
@@ -125,23 +132,26 @@ def parse_expression(expr):
     if char_range_match:
         return make_char_range(*char_range_match.groups())
 
-    return parse_sequence(expr)
+    return parse_sequence(expr, unescape)
 
 
-def parse_sequence(seq):
+def parse_sequence(seq, unescape):
     # sequence -> chain(*sequence_items)
     start = 0
     pos = 0
     bracketdepth = 0
     items = []
 
+    #print 'sequence:', seq
     while pos < len(seq):
-        if seq[pos] == '{':
+        if unescape and seq[pos] == '\\':
+            pos += 1
+        elif seq[pos] == '{':
             bracketdepth += 1
         elif seq[pos] == '}':
             bracketdepth -= 1
         elif seq[pos] == ',' and bracketdepth == 0:
-            items.append(parse_pattern(seq[start:pos]))
+            items.append(parse_pattern(seq[start:pos], unescape))
             start = pos + 1 # skip the comma
         pos += 1
 
@@ -149,7 +159,7 @@ def parse_sequence(seq):
         return iter(['{' + seq + '}'])
 
     # part after the last comma (may be the empty string)
-    items.append(parse_pattern(seq[start:]))
+    items.append(parse_pattern(seq[start:], unescape))
     return chain(*items)
 
 
@@ -172,66 +182,88 @@ def make_char_range(start, end, step=None):
            letters[start:end-1:-step]
 
 
-def _flatten(t):
+def _flatten(t, unescape):
     l = []
     for item in t:
-        if isinstance(item, tuple): l.extend(_flatten(item))
+        if isinstance(item, tuple): l.extend(_flatten(item, unescape))
         else: l.append(item)
-    return ''.join(l)
+    s = ''.join(l)
+    return escape_re.sub('\\1', s) if unescape else s
 
 
 def test_brace_expansion():
-    tests = {
-            '{1,2}': ['1', '2'],
-            '{1}': ['{1}'],
-            '{1,2{}}': ['1', '2{}'],
+    tests = [
+            ('{1,2}', ['1', '2']),
+            ('{1}', ['{1}']),
+            ('{1,2{}}', ['1', '2{}']),
 
             # Unbalanced braces
-            '{{1,2}': ['{{1,2}'], # Bash: {1 {2
-            '{1,2}}': ['{1,2}}'], # Bash: 1} 2}
-            '{1},2}': ['{1},2}'], # Bash: 1} 2
-            '{1,{2}': ['{1,{2}'], # Bash: {1,{2}
-            '{}1,2}': ['{}1,2}'], # Bash: }1 2
-            '{1,2{}': ['{1,2{}'], # Bash: {1,2{}
-            '}{1,2}': ['}{1,2}'], # Bash: }1 }2
-            '{1,2}{': ['{1,2}{'], # Bash: 1{ 2{
+            ('{{1,2}', ['{{1,2}']), # Bash: {1 {2
+            ('{1,2}}', ['{1,2}}']), # Bash: 1} 2}
+            ('{1},2}', ['{1},2}']), # Bash: 1} 2
+            ('{1,{2}', ['{1,{2}']), # Bash: {1,{2}
+            ('{}1,2}', ['{}1,2}']), # Bash: }1 2
+            ('{1,2{}', ['{1,2{}']), # Bash: {1,2{}
+            ('}{1,2}', ['}{1,2}']), # Bash: }1 }2
+            ('{1,2}{', ['{1,2}{']), # Bash: 1{ 2{
 
-            '}{': ['}{'],
-            'a{b,c}d{e,f}': ['abde', 'abdf', 'acde', 'acdf'],
-            'a{b,c{d,e,}}': ['ab', 'acd', 'ace', 'ac'],
-            'a{b,{c,{d,e}}}': ['ab', 'ac', 'ad', 'ae'],
-            '{{a,b},{c,d}}': ['a', 'b', 'c', 'd'],
-            '{7..10}': ['7', '8', '9', '10'],
-            '{10..7}': ['10', '9', '8', '7'],
-            '{1..5..2}': ['1', '3', '5'],
-            '{5..1..2}': ['5', '3', '1'],
-            '{07..10}': ['07', '08', '09', '10'],
-            '{7..010}': ['007', '008', '009', '010'],
-            '{a..e}': ['a', 'b', 'c', 'd', 'e'],
-            '{a..e..2}': ['a', 'c', 'e'],
-            '{e..a}': ['e', 'd', 'c', 'b', 'a'],
-            '{e..a..2}': ['e', 'c', 'a'],
-            '{1..a}': ['{1..a}'],
-            '{a..1}': ['{a..1}'],
-            '{1..1}': ['1'],
-            '{a..a}': ['a'],
-            '{,}': ['', ''],
-    }
-    bash_tests = {
-            '{Z..a}': ['Z', '[', ']', '^', '_', '`', 'a'],
-            '{a..Z}': ['a', '`', '_', '^', ']', '[', 'Z'],
-    }
-    default_tests = {
-            '{Z..a}': ['Z', 'a'],
-            '{a..Z}': ['a', 'Z'],
-    }
+            ('}{', ['}{']),
+            ('a{b,c}d{e,f}', ['abde', 'abdf', 'acde', 'acdf']),
+            ('a{b,c{d,e,}}', ['ab', 'acd', 'ace', 'ac']),
+            ('a{b,{c,{d,e}}}', ['ab', 'ac', 'ad', 'ae']),
+            ('{{a,b},{c,d}}', ['a', 'b', 'c', 'd']),
+            ('{7..10}', ['7', '8', '9', '10']),
+            ('{10..7}', ['10', '9', '8', '7']),
+            ('{1..5..2}', ['1', '3', '5']),
+            ('{5..1..2}', ['5', '3', '1']),
+            ('{07..10}', ['07', '08', '09', '10']),
+            ('{7..010}', ['007', '008', '009', '010']),
+            ('{a..e}', ['a', 'b', 'c', 'd', 'e']),
+            ('{a..e..2}', ['a', 'c', 'e']),
+            ('{e..a}', ['e', 'd', 'c', 'b', 'a']),
+            ('{e..a..2}', ['e', 'c', 'a']),
+            ('{1..a}', ['{1..a}']),
+            ('{a..1}', ['{a..1}']),
+            ('{1..1}', ['1']),
+            ('{a..a}', ['a']),
+            ('{,}', ['', '']),
+            ('{Z..a}', ['Z', 'a']),
+            ('{a..Z}', ['a', 'Z']),
+    ]
+    bash_tests = [
+            ('{Z..a}', ['Z', '[', ']', '^', '_', '`', 'a']),
+            ('{a..Z}', ['a', '`', '_', '^', ']', '[', 'Z']),
+    ]
+    unescape_tests = [
+            ('\\{1,2}', ['\\1', '\\2'], ['{1,2}']),
+            ('{1\\,2}', ['1\\', '2'], ['{1,2}']),
+            ('{1,2\\}', ['1', '2\\'], ['{1,2}']),
 
-    for pattern, result in tests.items() + default_tests.items():
+            ('\\}{1,2}', ['\\}{1,2}'], ['}1', '}2']),
+            ('\\{{1,2}', ['\\{{1,2}'], ['{1', '{2']),
+            ('{1,2}\\}', ['{1,2}\\}'], ['1}', '2}']),
+            ('{1,2}\\{', ['{1,2}\\{'], ['1{', '2{']),
+
+            ('{\\,1,2}', ['\\', '1', '2'], [',1', '2']),
+            ('{1\\,,2}', ['1\\', '', '2'], ['1,', '2']),
+            ('{1,\\,2}', ['1', '\\', '2'], ['1', ',2']),
+            ('{1,2\\,}', ['1', '2\\', ''], ['1', '2,']),
+
+            ('\\\\{1,2}', ['\\\\1', '\\\\2'], ['\\1', '\\2']),
+
+            ('\\{1..2}', ['\\1', '\\2'], ['{1..2}']),
+    ]
+
+    for pattern, result in tests:
         assert list(braceexpand(pattern)) == result
+
+    for pattern, result, result_unescape in unescape_tests:
+        assert list(braceexpand(pattern, False)) == result
+        assert list(braceexpand(pattern, True)) == result_unescape
 
     global USE_BASH_ALPHABET
     USE_BASH_ALPHABET = True
-    for pattern, result in tests.items() + bash_tests.items():
+    for pattern, result in bash_tests:
         assert list(braceexpand(pattern)) == result
     USE_BASH_ALPHABET = False
 
