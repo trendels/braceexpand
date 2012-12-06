@@ -28,13 +28,12 @@ def braceexpand(pattern):
     - Literal braces or commas can not be quoted using a backslash
       ('\\'). A backslash is treated like a regular character.
 
-    - No expansion will be done if the pattern contains unbalanced
-      braces. In this case the function will yield the original pattern.
+    - A (sub-)pattern containing unbalanced braces will not be
+      further expanded.
 
     - By default, a character range that crosses the uppercase to
       lowercase boundary (e.g. '{Z..a}' or '{a..Z}') will not include
-      the characters '[', ']', '^', '_', and '`' between 'Z' and 'a'
-      like it does in bash.
+      the characters '[]^_`' between 'Z' and 'a', like it would in bash.
 
       This behaviour can be enabled by setting the module-level variable
       USE_BASH_ALPHABET to True.
@@ -59,8 +58,8 @@ def braceexpand(pattern):
     >>> list(braceexpand('/usr/{ucb/{ex,edit},}'))
     ['/usr/ucb/ex', '/usr/ucb/edit', '/usr/']
 
-    # Prefixing an integer with zero causes all numbers to be padded to the
-    # same width.
+    # Prefixing an integer with zero causes all numbers to be padded to
+    # the same width.
     >>> list(braceexpand('{07..10}'))
     ['07', '08', '09', '10']
 
@@ -75,10 +74,6 @@ def braceexpand(pattern):
     # Unbalanced braces are not expanded (in bash(1), they often are):
     >>> list(braceexpand('{1}2,3}'))
     ['{1}2,3}']
-
-    # In Bash, this would expand to "X Y Z [ ] ^ _ ` a b c"
-    >>> list(braceexpand('{X..c}'))
-    ['X', 'Y', 'Z', 'a', 'b', 'c']
 
     """
     return (_flatten(t) for t in parse_pattern(pattern))
