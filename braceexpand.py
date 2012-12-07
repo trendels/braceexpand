@@ -17,34 +17,29 @@ USE_BASH_ALPHABET = False
 # This is consistent with Bash's behaviour.
 int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
-escape_re = re.compile(r'\\(.)')
+
 
 def braceexpand(pattern, escape=True):
     """braceexpand(pattern) --> iterator over generated strings
 
     Returns an iterator over the strings resulting from brace expansion
-    of pattern.
+    of pattern. This function implements Brace Expansion as described in
+    bash(1), with the following limitations:
 
-    When escape is True (the default), a backslash will cause the
-    character following it to be passed through without being
-    interpreted (This means literal backslashes in pattern have to
-    be doubled).
+    * A (sub-)pattern containing unbalanced braces will not be
+      further expanded.
+
+    * By default, a mixed-case character range like '{Z..a}' or '{a..Z}'
+      will not include the characters '[]^_`' between 'Z' and 'a'. To
+      enable this behaviour, set braceexpand.USE_BASH_ALPHABET to True.
+
+    When escape is True (the default), characters in pattern can be
+    prefixed with a backslash to cause them not to be interpreted as
+    special characters for brace expansion (such as '{', '}', ',').
+    To pass through a a literal backslash, double it ('\\\\').
 
     When escape is False, backslashes in pattern have no special
     meaning and will be preserved in the output.
-
-    This function behaves like Brace Expansion in as described in
-    bash(1), with the following limitations:
-
-    - A (sub-)pattern containing unbalanced braces will not be
-      further expanded.
-
-    - By default, a character range that crosses the uppercase to
-      lowercase boundary (e.g. '{Z..a}' or '{a..Z}') will not include
-      the characters '[]^_`' between 'Z' and 'a', like it would in bash.
-
-      This behaviour can be enabled by setting the module-level variable
-      USE_BASH_ALPHABET to True.
 
     Examples:
 
@@ -63,8 +58,8 @@ def braceexpand(pattern, escape=True):
     ['index.html', 'index.html.backup']
 
     # Nested patterns
-    >>> list(braceexpand('/usr/{ucb/{ex,edit},}'))
-    ['/usr/ucb/ex', '/usr/ucb/edit', '/usr/']
+    >>> list(braceexpand('python{2.{5..7},3.{2,3}}'))
+    ['python2.5', 'python2.6', 'python2.7', 'python3.2', 'python3.3']
 
     # Prefixing an integer with zero causes all numbers to be padded to
     # the same width.
@@ -75,13 +70,13 @@ def braceexpand(pattern, escape=True):
     >>> list(braceexpand('{a..g..2}'))
     ['a', 'c', 'e', 'g']
 
-    # The increment can be negative.
-    >>> list(braceexpand('{10..4..-2}'))
-    ['10', '8', '6', '4']
+    # Ranges can go in both directions
+    >>> list(braceexpand('{4..1}'))
+    ['4', '3', '2', '1']
 
     # Unbalanced braces are not expanded (in bash(1), they often are):
-    >>> list(braceexpand('{1}2,3}'))
-    ['{1}2,3}']
+    >>> list(braceexpand('{1{2,3}'))
+    ['{1{2,3}']
 
     # By default, the backslash is the escape character.
     >>> list(braceexpand(r'{1\\,2,3}'))
@@ -105,7 +100,8 @@ def parse_pattern(pattern, escape):
     #print 'pattern:', pattern
     while pos < len(pattern):
         if escape and pattern[pos] == '\\':
-            pos += 1
+            pos += 2
+            continue
         elif pattern[pos] == '{':
             if bracketdepth == 0 and pos > start:
                 #print 'literal:', pattern[start:pos]
@@ -120,7 +116,7 @@ def parse_pattern(pattern, escape):
                 start = pos + 1 # skip the closing brace
         pos += 1
 
-    if bracketdepth != 0:
+    if bracketdepth != 0: # unbalanced braces
         return iter([pattern])
 
     if start < pos:
@@ -152,7 +148,8 @@ def parse_sequence(seq, escape):
     #print 'sequence:', seq
     while pos < len(seq):
         if escape and seq[pos] == '\\':
-            pos += 1
+            pos += 2
+            continue
         elif seq[pos] == '{':
             bracketdepth += 1
         elif seq[pos] == '}':
@@ -162,7 +159,7 @@ def parse_sequence(seq, escape):
             start = pos + 1 # skip the comma
         pos += 1
 
-    if bracketdepth != 0 or not items:
+    if bracketdepth != 0 or not items: # unbalanced braces or not a sequence
         return iter(['{' + seq + '}'])
 
     # part after the last comma (may be the empty string)
@@ -175,9 +172,9 @@ def make_int_range(start, end, step=None):
     step = int(step) if step else 1
     start = int(start)
     end = int(end)
-    range_ = xrange(start, end+1, step) if start < end else \
-             xrange(start, end-1, -step)
-    return (str(i).rjust(padding, '0') for i in range_)
+    r = xrange(start, end+1, step) if start < end else \
+        xrange(start, end-1, -step)
+    return (str(i).rjust(padding, '0') for i in r)
 
 
 def make_char_range(start, end, step=None):
@@ -188,6 +185,8 @@ def make_char_range(start, end, step=None):
     return letters[start:end+1:step] if start < end else \
            letters[start:end-1:-step]
 
+
+escape_re = re.compile(r'\\(.)')
 
 def _flatten(t, escape):
     l = []
@@ -264,15 +263,15 @@ def test_brace_expansion():
     for pattern, result in tests:
         assert list(braceexpand(pattern)) == result
 
-    for pattern, result, result_escape in escape_tests:
-        assert list(braceexpand(pattern, False)) == result
-        assert list(braceexpand(pattern, True)) == result_escape
-
     global USE_BASH_ALPHABET
     USE_BASH_ALPHABET = True
     for pattern, result in bash_tests:
         assert list(braceexpand(pattern)) == result
     USE_BASH_ALPHABET = False
+
+    for pattern, result, result_escape in escape_tests:
+        assert list(braceexpand(pattern, False)) == result
+        assert list(braceexpand(pattern, True)) == result_escape
 
     return "tests pass"
 
