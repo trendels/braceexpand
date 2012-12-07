@@ -19,13 +19,19 @@ int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
 escape_re = re.compile(r'\\(.)')
 
-def braceexpand(pattern, unescape=False):
+def braceexpand(pattern, escape=True):
     """braceexpand(pattern) --> iterator over generated strings
 
     Returns an iterator over the strings resulting from brace expansion
-    of pattern. When unescape is True, a backslash will cause the
-    following character to be passed through without being interpreted
-    (this will remove one level of quoting from pattern).
+    of pattern.
+
+    When escape is True (the default), a backslash will cause the
+    character following it to be passed through without being
+    interpreted (This means literal backslashes in pattern have to
+    be doubled).
+
+    When escape is False, backslashes in pattern have no special
+    meaning and will be preserved in the output.
 
     This function behaves like Brace Expansion in as described in
     bash(1), with the following limitations:
@@ -77,18 +83,19 @@ def braceexpand(pattern, unescape=False):
     >>> list(braceexpand('{1}2,3}'))
     ['{1}2,3}']
 
-    # Set 'unescape' to True if you need to escape braces or commas.
-    >>> list(braceexpand('{1\\\\,2,3}'))
-    ['1\\\\', '2', '3']
-
-    >>> list(braceexpand('{1\\\\,2,3}', unescape=True))
+    # By default, the backslash is the escape character.
+    >>> list(braceexpand(r'{1\\,2,3}'))
     ['1,2', '3']
 
+    # This can be disabled by setting 'escape' to False:
+    >>> list(braceexpand(r'{1\\,2,3}', escape=False))
+    ['1\\\\', '2', '3']
+
     """
-    return (_flatten(t, unescape) for t in parse_pattern(pattern, unescape))
+    return (_flatten(t, escape) for t in parse_pattern(pattern, escape))
 
 
-def parse_pattern(pattern, unescape):
+def parse_pattern(pattern, escape):
     # pattern -> product(*parts)
     start = 0
     pos = 0
@@ -97,7 +104,7 @@ def parse_pattern(pattern, unescape):
 
     #print 'pattern:', pattern
     while pos < len(pattern):
-        if unescape and pattern[pos] == '\\':
+        if escape and pattern[pos] == '\\':
             pos += 1
         elif pattern[pos] == '{':
             if bracketdepth == 0 and pos > start:
@@ -109,7 +116,7 @@ def parse_pattern(pattern, unescape):
             bracketdepth -= 1
             if bracketdepth == 0:
                 #print 'expression:', pattern[start+1:pos]
-                items.append(parse_expression(pattern[start+1:pos], unescape))
+                items.append(parse_expression(pattern[start+1:pos], escape))
                 start = pos + 1 # skip the closing brace
         pos += 1
 
@@ -123,7 +130,7 @@ def parse_pattern(pattern, unescape):
     return product(*items)
 
 
-def parse_expression(expr, unescape):
+def parse_expression(expr, escape):
     int_range_match = int_range_re.match(expr)
     if int_range_match:
         return make_int_range(*int_range_match.groups())
@@ -132,10 +139,10 @@ def parse_expression(expr, unescape):
     if char_range_match:
         return make_char_range(*char_range_match.groups())
 
-    return parse_sequence(expr, unescape)
+    return parse_sequence(expr, escape)
 
 
-def parse_sequence(seq, unescape):
+def parse_sequence(seq, escape):
     # sequence -> chain(*sequence_items)
     start = 0
     pos = 0
@@ -144,14 +151,14 @@ def parse_sequence(seq, unescape):
 
     #print 'sequence:', seq
     while pos < len(seq):
-        if unescape and seq[pos] == '\\':
+        if escape and seq[pos] == '\\':
             pos += 1
         elif seq[pos] == '{':
             bracketdepth += 1
         elif seq[pos] == '}':
             bracketdepth -= 1
         elif seq[pos] == ',' and bracketdepth == 0:
-            items.append(parse_pattern(seq[start:pos], unescape))
+            items.append(parse_pattern(seq[start:pos], escape))
             start = pos + 1 # skip the comma
         pos += 1
 
@@ -159,7 +166,7 @@ def parse_sequence(seq, unescape):
         return iter(['{' + seq + '}'])
 
     # part after the last comma (may be the empty string)
-    items.append(parse_pattern(seq[start:], unescape))
+    items.append(parse_pattern(seq[start:], escape))
     return chain(*items)
 
 
@@ -182,13 +189,13 @@ def make_char_range(start, end, step=None):
            letters[start:end-1:-step]
 
 
-def _flatten(t, unescape):
+def _flatten(t, escape):
     l = []
     for item in t:
-        if isinstance(item, tuple): l.extend(_flatten(item, unescape))
+        if isinstance(item, tuple): l.extend(_flatten(item, escape))
         else: l.append(item)
     s = ''.join(l)
-    return escape_re.sub('\\1', s) if unescape else s
+    return escape_re.sub(r'\1', s) if escape else s
 
 
 def test_brace_expansion():
@@ -234,7 +241,7 @@ def test_brace_expansion():
             ('{Z..a}', ['Z', '[', ']', '^', '_', '`', 'a']),
             ('{a..Z}', ['a', '`', '_', '^', ']', '[', 'Z']),
     ]
-    unescape_tests = [
+    escape_tests = [
             ('\\{1,2}', ['\\1', '\\2'], ['{1,2}']),
             ('{1\\,2}', ['1\\', '2'], ['{1,2}']),
             ('{1,2\\}', ['1', '2\\'], ['{1,2}']),
@@ -257,9 +264,9 @@ def test_brace_expansion():
     for pattern, result in tests:
         assert list(braceexpand(pattern)) == result
 
-    for pattern, result, result_unescape in unescape_tests:
+    for pattern, result, result_escape in escape_tests:
         assert list(braceexpand(pattern, False)) == result
-        assert list(braceexpand(pattern, True)) == result_unescape
+        assert list(braceexpand(pattern, True)) == result_escape
 
     global USE_BASH_ALPHABET
     USE_BASH_ALPHABET = True
