@@ -1,6 +1,6 @@
 """Bash-style brace expansion"""
 import unittest
-import braceexpand
+from braceexpand import braceexpand
 
 class BraceExpand(unittest.TestCase):
     tests = [
@@ -65,38 +65,20 @@ class BraceExpand(unittest.TestCase):
 
     def test_braceexpand(self):
         for pattern, expected in self.tests:
-            result = list(braceexpand.braceexpand(pattern))
+            result = list(braceexpand(pattern))
             self.assertEqual(expected, result)
 
     def test_braceexpand_unbalanced(self):
         for pattern, expected in self.unbalanced_tests:
-            result = list(braceexpand.braceexpand(pattern))
+            result = list(braceexpand(pattern))
             self.assertEqual(expected, result)
 
     def test_braceexpand_escape(self):
         for pattern, expected_false, expected_true in self.escape_tests:
-            result_false = list(braceexpand.braceexpand(pattern, False))
-            result_true = list(braceexpand.braceexpand(pattern, True))
+            result_false = list(braceexpand(pattern, False))
+            result_true = list(braceexpand(pattern, True))
             self.assertEqual(expected_false, result_false)
             self.assertEqual(expected_true, result_true)
-
-
-class BashAlphabet(unittest.TestCase):
-    bash_tests = [
-            ('{Z..a}', ['Z', '[', ']', '^', '_', '`', 'a']),
-            ('{a..Z}', ['a', '`', '_', '^', ']', '[', 'Z']),
-    ]
-
-    def setUp(self):
-        braceexpand.USE_BASH_ALPHABET = True
-
-    def tearDown(self):
-        braceexpand.USE_BASH_ALPHABET = False
-
-    def test_braceexpand_use_bash_alphabet(self):
-        for pattern, expected in self.bash_tests:
-            result = list(braceexpand.braceexpand(pattern))
-            self.assertEqual(expected, result)
 
 
 if __name__ == '__main__':

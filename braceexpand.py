@@ -5,19 +5,12 @@ from itertools import chain, product
 
 __version__ = '0.1.0'
 
-__all__ = ['braceexpand', 'alphabet', 'alphabet_bash', 'USE_BASH_ALPHABET']
+__all__ = ['braceexpand', 'alphabet']
 
 alphabet = string.uppercase + string.lowercase
-alphabet_bash = string.uppercase + '[]^_`' + string.lowercase
 
-USE_BASH_ALPHABET = False
-
-# Even in 'bash' mode the extra punctuation characters between 'Z'
-# and 'a' are not valid start or end points for a character range.
-# This is consistent with Bash's behaviour.
 int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
-
 
 def braceexpand(pattern, escape=True):
     """braceexpand(pattern) --> iterator over generated strings
@@ -29,9 +22,8 @@ def braceexpand(pattern, escape=True):
     * A (sub-)pattern containing unbalanced braces will not be
       further expanded.
 
-    * By default, a mixed-case character range like '{Z..a}' or '{a..Z}'
-      will not include the characters '[]^_`' between 'Z' and 'a'. To
-      enable this behaviour, set braceexpand.USE_BASH_ALPHABET to True.
+    * A mixed-case character range like '{Z..a}' or '{a..Z}' will not
+      include the characters '[]^_`' between 'Z' and 'a'.
 
     When escape is True (the default), characters in pattern can be
     prefixed with a backslash to cause them not to be interpreted as
@@ -179,11 +171,10 @@ def make_int_range(start, end, step=None):
 
 def make_char_range(start, end, step=None):
     step = int(step) if step else 1
-    letters = alphabet_bash if USE_BASH_ALPHABET else alphabet
-    start = letters.index(start)
-    end = letters.index(end)
-    return letters[start:end+1:step] if start < end else \
-           letters[start:end-1:-step]
+    start = alphabet.index(start)
+    end = alphabet.index(end)
+    return alphabet[start:end+1:step] if start < end else \
+           alphabet[start:end-1:-step]
 
 
 escape_re = re.compile(r'\\(.)')
