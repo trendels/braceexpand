@@ -1,4 +1,3 @@
-"""Bash-style brace expansion"""
 import unittest
 from braceexpand import braceexpand
 
