@@ -1,6 +1,8 @@
 Bash-style brace expansion for Python
 =====================================
 
+|build-status-img|
+
 Implements Brace Expansion as described in
 `bash(1) <http://man7.org/linux/man-pages/man1/bash.1.html#EXPANSION>`__,
 with the following limitations:
@@ -38,3 +40,6 @@ License
 
 braceexpand is licensed unter the MIT License. See the included file
 ``LICENSE`` for details.
+
+.. |build-status-img| image:: https://travis-ci.org/trendels/braceexpand.svg
+   :target: https://travis-ci.org/trendels/braceexpand
