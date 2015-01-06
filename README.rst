@@ -1,5 +1,5 @@
-braceexpand: Bash-style brace expansion for Python
-==================================================
+Bash-style brace expansion for Python
+=====================================
 
 Implements Brace Expansion as described in
 `bash(1) <http://man7.org/linux/man-pages/man1/bash.1.html#EXPANSION>`__,
@@ -10,7 +10,7 @@ with the following limitations:
    either be partly expanded or ignored.
 
 -  A mixed-case character range like ``'{Z..a}'`` or ``'{a..Z}'`` will
-   not include the characters ``[]^_`` between``\ Z\ ``and``\ a\`.
+   not include the characters ``[]^_``` between ``Z`` and ``a``.
 
 The ``braceexpand`` function returns an iterator over the expansions
 generated from a pattern.
