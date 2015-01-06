@@ -17,13 +17,54 @@ with the following limitations:
 The ``braceexpand`` function returns an iterator over the expansions
 generated from a pattern.
 
-Example:
+Examples:
 
 .. code:: python
 
     >>> from braceexpand import braceexpand
+
+    # Integer range
+    >>> list(braceexpand('item{1..3}'))
+    ['item1', 'item2', 'item3']
+
+    # Character range
+    >>> list(braceexpand('{a..c}'))
+    ['a', 'b', 'c']
+
+    # Sequence
+    >>> list(braceexpand('index.html{,.backup}'))
+    ['index.html', 'index.html.backup']
+
+    # Nested patterns
     >>> list(braceexpand('python{2.{5..7},3.{2,3}}'))
     ['python2.5', 'python2.6', 'python2.7', 'python3.2', 'python3.3']
+
+    # Prefixing an integer with zero causes all numbers to be padded to
+    # the same width.
+    >>> list(braceexpand('{07..10}'))
+    ['07', '08', '09', '10']
+
+    # An optional increment can be specified for ranges.
+    >>> list(braceexpand('{a..g..2}'))
+    ['a', 'c', 'e', 'g']
+
+    # Ranges can go in both directions.
+    >>> list(braceexpand('{4..1}'))
+    ['4', '3', '2', '1']
+
+    # Unbalanced braces raise an exception.
+    >>> list(braceexpand('{1{2,3}'))
+    Traceback (most recent call last):
+        ...
+    UnbalancedBracesError: Unbalanced braces: '{1{2,3}'
+
+    # By default, the backslash is the escape character.
+    >>> list(braceexpand(r'{1\{2,3}'))
+    ['1{2', '3']
+
+    # Setting 'escape' to False disables backslash escaping.
+    >>> list(braceexpand(r'\{1,2}', escape=False))
+    ['\\1', '\\2']
 
 Installation
 ------------
