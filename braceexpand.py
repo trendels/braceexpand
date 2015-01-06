@@ -162,7 +162,7 @@ def parse_sequence(seq, escape):
 
 
 def make_int_range(start, end, step=None):
-    padding = max(len(s) for s in (start, end, '0') if s.startswith('0'))
+    padding = max([len(start), len(end)]) if '0' in (start[0], end[0]) else 0
     step = int(step) if step else 1
     start = int(start)
     end = int(end)

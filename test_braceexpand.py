@@ -79,6 +79,10 @@ class BraceExpand(unittest.TestCase):
             self.assertEqual(expected_false, result_false)
             self.assertEqual(expected_true, result_true)
 
+    def test_zero_padding(self):
+        result = braceexpand('{01..1000}')
+        self.assertEqual(next(result), '0001')
+
 
 if __name__ == '__main__':
     unittest.main()
