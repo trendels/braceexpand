@@ -3,7 +3,7 @@ import re
 import string
 from itertools import chain, product
 
-__version__ = '0.2'
+__version__ = '0.1'
 
 __all__ = ['braceexpand', 'alphabet', 'UnbalancedBracesError']
 
