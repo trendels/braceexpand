@@ -13,14 +13,16 @@ int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
 
 def braceexpand(pattern, escape=True):
-    """braceexpand(pattern) --> iterator over generated strings
+    """braceexpand(pattern) -> iterator over generated strings
 
     Returns an iterator over the strings resulting from brace expansion
     of pattern. This function implements Brace Expansion as described in
     bash(1), with the following limitations:
 
     * A (sub-)pattern containing unbalanced braces will not be
-      further expanded.
+      further expanded. For example, bash will expand '{{1,2}' -> '{1 {2',
+      but not '}{1,2}'. Instead, use backslash escaping (see below) to
+      include literal braces in patterns.
 
     * A mixed-case character range like '{Z..a}' or '{a..Z}' will not
       include the characters '[]^_`' between 'Z' and 'a'.
@@ -62,21 +64,21 @@ def braceexpand(pattern, escape=True):
     >>> list(braceexpand('{a..g..2}'))
     ['a', 'c', 'e', 'g']
 
-    # Ranges can go in both directions
+    # Ranges can go in both directions.
     >>> list(braceexpand('{4..1}'))
     ['4', '3', '2', '1']
 
-    # Unbalanced braces are not expanded (in bash(1), they often are):
+    # Unbalanced braces are not expanded.
     >>> list(braceexpand('{1{2,3}'))
     ['{1{2,3}']
 
     # By default, the backslash is the escape character.
-    >>> list(braceexpand(r'{1\\,2,3}'))
-    ['1,2', '3']
+    >>> list(braceexpand(r'{1\{2,3}'))
+    ['1{2', '3']
 
-    # This can be disabled by setting 'escape' to False:
-    >>> list(braceexpand(r'{1\\,2,3}', escape=False))
-    ['1\\\\', '2', '3']
+    # Setting 'escape' to False disables backslash escaping.
+    >>> list(braceexpand(r'\{1,2}', escape=False))
+    ['\\\\1', '\\\\2']
 
     """
     return (_flatten(t, escape) for t in parse_pattern(pattern, escape))
