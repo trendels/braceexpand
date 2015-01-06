@@ -3,9 +3,11 @@ import re
 import string
 from itertools import chain, product
 
-__version__ = '0.1.0'
+__version__ = '0.2'
 
-__all__ = ['braceexpand', 'alphabet']
+__all__ = ['braceexpand', 'alphabet', 'UnbalancedBracesError']
+
+class UnbalancedBracesError(ValueError): pass
 
 alphabet = string.uppercase + string.lowercase
 
@@ -19,10 +21,9 @@ def braceexpand(pattern, escape=True):
     of pattern. This function implements Brace Expansion as described in
     bash(1), with the following limitations:
 
-    * A (sub-)pattern containing unbalanced braces will not be
-      further expanded. For example, bash will expand '{{1,2}' -> '{1 {2',
-      but not '}{1,2}'. Instead, use backslash escaping (see below) to
-      include literal braces in patterns.
+    * A pattern containing unbalanced braces will raise an
+      UnbalancedBracesError exception. In bash, unbalanced braces will either
+      be partly expanded or ignored.
 
     * A mixed-case character range like '{Z..a}' or '{a..Z}' will not
       include the characters '[]^_`' between 'Z' and 'a'.
@@ -68,9 +69,11 @@ def braceexpand(pattern, escape=True):
     >>> list(braceexpand('{4..1}'))
     ['4', '3', '2', '1']
 
-    # Unbalanced braces are not expanded.
+    # Unbalanced braces raise an exception.
     >>> list(braceexpand('{1{2,3}'))
-    ['{1{2,3}']
+    Traceback (most recent call last):
+        ...
+    UnbalancedBracesError: Unbalanced braces: '{1{2,3}'
 
     # By default, the backslash is the escape character.
     >>> list(braceexpand(r'{1\{2,3}'))
@@ -111,7 +114,7 @@ def parse_pattern(pattern, escape):
         pos += 1
 
     if bracketdepth != 0: # unbalanced braces
-        return iter([pattern])
+        raise UnbalancedBracesError("Unbalanced braces: '%s'" % pattern)
 
     if start < pos:
         #print 'literal:', pattern[start:]
@@ -187,6 +190,7 @@ def _flatten(t, escape):
         if isinstance(item, tuple): l.extend(_flatten(item, escape))
         else: l.append(item)
     s = ''.join(l)
+    # Strip escape characters from generated strings after expansion.
     return escape_re.sub(r'\1', s) if escape else s
 
 

@@ -1,5 +1,5 @@
 import unittest
-from braceexpand import braceexpand
+from braceexpand import braceexpand, UnbalancedBracesError
 
 class BraceExpand(unittest.TestCase):
     tests = [
@@ -32,34 +32,46 @@ class BraceExpand(unittest.TestCase):
 
     unbalanced_tests = [
             # Unbalanced braces
-            ('{{1,2}', ['{{1,2}']), # Bash: {1 {2
-            ('{1,2}}', ['{1,2}}']), # Bash: 1} 2}
-            ('{1},2}', ['{1},2}']), # Bash: 1} 2
-            ('{1,{2}', ['{1,{2}']), # Bash: {1,{2}
-            ('{}1,2}', ['{}1,2}']), # Bash: }1 2
-            ('{1,2{}', ['{1,2{}']), # Bash: {1,2{}
-            ('}{1,2}', ['}{1,2}']), # Bash: }1 }2
-            ('{1,2}{', ['{1,2}{']), # Bash: 1{ 2{
+            '{{1,2}',  # Bash: {1 {2
+            '{1,2}}',  # Bash: 1} 2}
+            '{1},2}',  # Bash: 1} 2
+            '{1,{2}',  # Bash: {1,{2}
+            '{}1,2}',  # Bash: }1 2
+            '{1,2{}',  # Bash: {1,2{}
+            '}{1,2}',  # Bash: }1 }2
+            '{1,2}{',  # Bash: 1{ 2{
     ]
 
     escape_tests = [
-            ('\\{1,2}', ['\\1', '\\2'], ['{1,2}']),
-            ('{1\\,2}', ['1\\', '2'], ['{1,2}']),
-            ('{1,2\\}', ['1', '2\\'], ['{1,2}']),
+            ('\\{1,2\\}', ['{1,2}']),
+            ('{1\\,2}',   ['{1,2}']),
 
-            ('\\}{1,2}', ['\\}{1,2}'], ['}1', '}2']),
-            ('\\{{1,2}', ['\\{{1,2}'], ['{1', '{2']),
-            ('{1,2}\\}', ['{1,2}\\}'], ['1}', '2}']),
-            ('{1,2}\\{', ['{1,2}\\{'], ['1{', '2{']),
+            ('\\}{1,2}', ['}1', '}2']),
+            ('\\{{1,2}', ['{1', '{2']),
+            ('{1,2}\\}', ['1}', '2}']),
+            ('{1,2}\\{', ['1{', '2{']),
 
-            ('{\\,1,2}', ['\\', '1', '2'], [',1', '2']),
-            ('{1\\,,2}', ['1\\', '', '2'], ['1,', '2']),
-            ('{1,\\,2}', ['1', '\\', '2'], ['1', ',2']),
-            ('{1,2\\,}', ['1', '2\\', ''], ['1', '2,']),
+            ('{\\,1,2}', [',1', '2']),
+            ('{1\\,,2}', ['1,', '2']),
+            ('{1,\\,2}', ['1', ',2']),
+            ('{1,2\\,}', ['1', '2,']),
 
-            ('\\\\{1,2}', ['\\\\1', '\\\\2'], ['\\1', '\\2']),
+            ('\\\\{1,2}', ['\\1', '\\2']),
 
-            ('\\{1..2}', ['\\1', '\\2'], ['{1..2}']),
+            ('\\{1..2\\}', ['{1..2}']),
+    ]
+
+    no_escape_tests = [
+            ('\\{1,2}', ['\\1', '\\2']),
+            ('{1,2\\}', ['1', '2\\']),
+            ('{1\\,2}', ['1\\', '2']),
+
+            ('{\\,1,2}', ['\\', '1', '2']),
+            ('{1\\,,2}', ['1\\', '', '2']),
+            ('{1,\\,2}', ['1', '\\', '2']),
+            ('{1,2\\,}', ['1', '2\\', '']),
+
+            ('\\{1..2\\}', ['\\{1..2\\}']),
     ]
 
     def test_braceexpand(self):
@@ -68,16 +80,18 @@ class BraceExpand(unittest.TestCase):
             self.assertEqual(expected, result)
 
     def test_braceexpand_unbalanced(self):
-        for pattern, expected in self.unbalanced_tests:
-            result = list(braceexpand(pattern))
-            self.assertEqual(expected, result)
+        for pattern in self.unbalanced_tests:
+            self.assertRaises(UnbalancedBracesError, braceexpand, pattern)
 
     def test_braceexpand_escape(self):
-        for pattern, expected_false, expected_true in self.escape_tests:
-            result_false = list(braceexpand(pattern, False))
-            result_true = list(braceexpand(pattern, True))
-            self.assertEqual(expected_false, result_false)
-            self.assertEqual(expected_true, result_true)
+        for pattern, expected in self.escape_tests:
+            result = list(braceexpand(pattern, escape=True))
+            self.assertEqual(expected, result)
+
+    def test_braceexpand_no_escape(self):
+        for pattern, expected in self.no_escape_tests:
+            result = list(braceexpand(pattern, escape=False))
+            self.assertEqual(expected, result)
 
     def test_zero_padding(self):
         result = braceexpand('{01..1000}')
