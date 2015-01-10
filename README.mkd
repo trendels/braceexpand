@@ -12,10 +12,24 @@ limitations:
   * A mixed-case character range like `'{Z..a}'` or `'{a..Z}'` will not
     include the characters `` []^_` `` between `Z` and `a`.
 
+`braceexpand` is tested with Python 2.6, 2.7, 3.2, 3.3, 3.4.
+
+## Installation
+
+Drop the `braceexpand.py` file into your project, or install the
+`braceexpand` package from pypi:
+
+    $ pip install braceexpand
+
+## License
+
+braceexpand is licensed unter the MIT License. See the included file `LICENSE`
+for details.
+
+## Examples
+
 The `braceexpand` function returns an iterator over the expansions generated
 from a pattern.
-
-Examples:
 
 ~~~python
 >>> from braceexpand import braceexpand
@@ -63,18 +77,6 @@ UnbalancedBracesError: Unbalanced braces: '{1{2,3}'
 >>> list(braceexpand(r'\{1,2}', escape=False))
 ['\\1', '\\2']
 ~~~
-
-## Installation
-
-Drop the `braceexpand.py` file into your project, or install the
-`braceexpand` package from pypi:
-
-    $ pip install braceexpand
-
-## License
-
-braceexpand is licensed unter the MIT License. See the included file `LICENSE`
-for details.
 
 [1]: http://man7.org/linux/man-pages/man1/bash.1.html#EXPANSION
 [build-status-url]: https://travis-ci.org/trendels/braceexpand
