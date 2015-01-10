@@ -1,6 +1,7 @@
 """Bash-style brace expansion"""
 import re
 import string
+import sys
 from itertools import chain, product
 
 __version__ = '0.1'
@@ -9,7 +10,13 @@ __all__ = ['braceexpand', 'alphabet', 'UnbalancedBracesError']
 
 class UnbalancedBracesError(ValueError): pass
 
-alphabet = string.uppercase + string.lowercase
+PY3 = sys.version_info.major >= 3
+
+if PY3:
+    alphabet = string.ascii_uppercase + string.ascii_lowercase
+    xrange = range
+else:
+    alphabet = string.uppercase + string.lowercase
 
 int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
@@ -196,5 +203,5 @@ def _flatten(t, escape):
 
 if __name__ == '__main__':
     import doctest
-    doctest.testmod()
+    doctest.testmod(optionflags=doctest.IGNORE_EXCEPTION_DETAIL)
 
