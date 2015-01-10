@@ -1,8 +1,9 @@
-import os
+import re
 
 from setuptools import setup
 
-version = '0.1'
+with open('braceexpand.py') as f:
+    version = re.findall(r"^__version__ = '(.*)'", f.read(), re.M)[0]
 
 with open('README.rst') as f:
     README = f.read()
