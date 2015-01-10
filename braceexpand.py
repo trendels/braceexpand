@@ -10,7 +10,7 @@ __all__ = ['braceexpand', 'alphabet', 'UnbalancedBracesError']
 
 class UnbalancedBracesError(ValueError): pass
 
-PY3 = sys.version_info.major >= 3
+PY3 = sys.version_info[0] >= 3
 
 if PY3:
     alphabet = string.ascii_uppercase + string.ascii_lowercase
