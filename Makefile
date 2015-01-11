@@ -4,3 +4,5 @@ README.rst: README.mkd
 test:
 	python braceexpand.py
 	python test_braceexpand.py
+
+.PHONY: test
