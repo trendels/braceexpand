@@ -13,10 +13,9 @@ class UnbalancedBracesError(ValueError): pass
 PY3 = sys.version_info[0] >= 3
 
 if PY3:
-    alphabet = string.ascii_uppercase + string.ascii_lowercase
     xrange = range
-else:
-    alphabet = string.uppercase + string.lowercase
+
+alphabet = string.ascii_uppercase + string.ascii_lowercase
 
 int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
