@@ -21,11 +21,6 @@ Drop the `braceexpand.py` file into your project, or install the
 
     $ pip install braceexpand
 
-## License
-
-braceexpand is licensed unter the MIT License. See the included file `LICENSE`
-for details.
-
 ## Examples
 
 The `braceexpand` function returns an iterator over the expansions generated
@@ -81,3 +76,8 @@ UnbalancedBracesError: Unbalanced braces: '{1{2,3}'
 [1]: http://man7.org/linux/man-pages/man1/bash.1.html#EXPANSION
 [build-status-url]: https://travis-ci.org/trendels/braceexpand
 [build-status-img]: https://travis-ci.org/trendels/braceexpand.svg
+
+## License
+
+braceexpand is licensed unter the MIT License. See the included file `LICENSE`
+for details.

@@ -26,12 +26,6 @@ Drop the ``braceexpand.py`` file into your project, or install the
 
     $ pip install braceexpand
 
-License
--------
-
-braceexpand is licensed unter the MIT License. See the included file
-``LICENSE`` for details.
-
 Examples
 --------
 
@@ -84,6 +78,12 @@ generated from a pattern.
     # Setting 'escape' to False disables backslash escaping.
     >>> list(braceexpand(r'\{1,2}', escape=False))
     ['\\1', '\\2']
+
+License
+-------
+
+braceexpand is licensed unter the MIT License. See the included file
+``LICENSE`` for details.
 
 .. |build-status-img| image:: https://travis-ci.org/trendels/braceexpand.svg
    :target: https://travis-ci.org/trendels/braceexpand
