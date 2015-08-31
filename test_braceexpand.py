@@ -94,8 +94,24 @@ class BraceExpand(unittest.TestCase):
             self.assertEqual(expected, result)
 
     def test_zero_padding(self):
+        result = list(braceexpand('{00..10}'))
+        self.assertEqual(result[:2], ['00', '01'])
+
+        result = list(braceexpand('{10..00}'))
+        self.assertEqual(result[-2:], ['01', '00'])
+
+        result = list(braceexpand('{0..010}'))
+        self.assertEqual(result[:2], ['000', '001'])
+
         result = braceexpand('{01..1000}')
         self.assertEqual(next(result), '0001')
+
+    def test_zero_single_digit(self):
+        result = list(braceexpand('{0..10}'))
+        self.assertEqual(result[:2], ['0', '1'])
+
+        result = list(braceexpand('{10..0}'))
+        self.assertEqual(result[-2:], ['1', '0'])
 
 
 if __name__ == '__main__':
