@@ -205,5 +205,7 @@ def _flatten(t, escape):
 
 if __name__ == '__main__':
     import doctest
-    doctest.testmod(optionflags=doctest.IGNORE_EXCEPTION_DETAIL)
-
+    import sys
+    failed, _ = doctest.testmod(optionflags=doctest.IGNORE_EXCEPTION_DETAIL)
+    if failed:
+        sys.exit(1)
