@@ -14,7 +14,7 @@ with the following limitations:
 -  A mixed-case character range like ``'{Z..a}'`` or ``'{a..Z}'`` will
    not include the characters ``[]^_``` between ``Z`` and ``a``.
 
-``braceexpand`` is tested with Python 2.6, 2.7, 3.2, 3.3, 3.4.
+``braceexpand`` is tested with Python 2.6, 2.7, and 3.5+
 
 Installation
 ------------
