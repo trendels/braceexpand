@@ -20,6 +20,7 @@ alphabet = string.ascii_uppercase + string.ascii_lowercase
 int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
 
+
 def braceexpand(pattern, escape=True):
     """braceexpand(pattern) -> iterator over generated strings
 
@@ -115,7 +116,12 @@ def parse_pattern(pattern, escape):
             bracketdepth -= 1
             if bracketdepth == 0:
                 #print 'expression:', pattern[start+1:pos]
-                items.append(parse_expression(pattern[start+1:pos], escape))
+                expr = pattern[start+1:pos]
+                item = parse_expression(expr, escape)
+                if item is None:  # not a range or sequence
+                    items.extend([['{'], parse_pattern(expr, escape), ['}']])
+                else:
+                    items.append(item)
                 start = pos + 1 # skip the closing brace
         pos += 1
 
@@ -163,7 +169,7 @@ def parse_sequence(seq, escape):
         pos += 1
 
     if bracketdepth != 0 or not items: # unbalanced braces or not a sequence
-        return iter(['{' + seq + '}'])
+        return None
 
     # part after the last comma (may be the empty string)
     items.append(parse_pattern(seq[start:], escape))
