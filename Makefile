@@ -1,4 +1,4 @@
-README.rst: README.mkd
+README.rst: README.md
 	pandoc --from=markdown --to=rst $< > $@
 
 test:

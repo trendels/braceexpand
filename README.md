@@ -16,8 +16,7 @@ limitations:
 
 ## Installation
 
-Drop the `braceexpand.py` file into your project, or install the
-`braceexpand` package from pypi:
+Install the `braceexpand` package from pypi:
 
     $ pip install braceexpand
 
