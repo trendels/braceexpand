@@ -1,1 +1,1 @@
-include README.* LICENSE Makefile test_braceexpand.py
+include CHANGELOG.md README.* LICENSE Makefile test_braceexpand.py
