@@ -17,7 +17,7 @@ if PY3:
 
 alphabet = string.ascii_uppercase + string.ascii_lowercase
 
-int_range_re = re.compile(r'^(\d+)\.\.(\d+)(?:\.\.-?(\d+))?$')
+int_range_re = re.compile(r'^(-?\d+)\.\.(-?\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
 
 
@@ -177,7 +177,7 @@ def parse_sequence(seq, escape):
 
 
 def make_int_range(start, end, step=None):
-    if any([s[0] == '0' for s in (start, end) if s != '0']):
+    if any([s.startswith(('0', '-0')) for s in (start, end) if s != '0']):
         padding = max(len(start), len(end))
     else:
         padding = 0
@@ -186,7 +186,8 @@ def make_int_range(start, end, step=None):
     end = int(end)
     r = xrange(start, end+1, step) if start < end else \
         xrange(start, end-1, -step)
-    return (str(i).rjust(padding, '0') for i in r)
+    fmt = '%0{}d'.format(padding)
+    return (fmt % i for i in r)
 
 
 def make_char_range(start, end, step=None):
