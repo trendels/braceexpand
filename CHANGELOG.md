@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4 (2019-11-26)
+
+  - Add support negative integers in ranges
+
 ## 0.1.3 (2019-10-02)
 
   - Fix bug where patterns nested inside an extra level of braces were not
