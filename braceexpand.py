@@ -76,6 +76,10 @@ def braceexpand(pattern, escape=True):
     >>> list(braceexpand('{4..1}'))
     ['4', '3', '2', '1']
 
+    # Numbers can be negative
+    >>> list(braceexpand('{2..-1}'))
+    ['2', '1', '0', '-1']
+
     # Unbalanced braces raise an exception.
     >>> list(braceexpand('{1{2,3}'))
     Traceback (most recent call last):
