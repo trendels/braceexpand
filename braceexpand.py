@@ -186,7 +186,7 @@ def make_int_range(start, end, step=None):
         padding = max(len(start), len(end))
     else:
         padding = 0
-    step = int(step) if step else 1
+    step = (int(step) or 1) if step else 1
     start = int(start)
     end = int(end)
     r = xrange(start, end+1, step) if start < end else \
