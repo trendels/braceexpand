@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.5 (2019-11-27)
+
+   - Don't pad int range when start or end is '-0'
+   - Fix handling of range with increment '0'
+
 ## 0.1.4 (2019-11-26)
 
   - Add support for negative integers in ranges
