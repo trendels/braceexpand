@@ -181,7 +181,8 @@ def parse_sequence(seq, escape):
 
 
 def make_int_range(start, end, step=None):
-    if any([s.startswith(('0', '-0')) for s in (start, end) if s != '0']):
+    if any([s.startswith(('0', '-0'))
+            for s in (start, end) if s not in ('0', '-0')]):
         padding = max(len(start), len(end))
     else:
         padding = 0

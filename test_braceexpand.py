@@ -120,6 +120,15 @@ class BraceExpand(unittest.TestCase):
         result = list(braceexpand('{10..0}'))
         self.assertEqual(result[-2:], ['1', '0'])
 
+    def test_negative_zero(self):
+        result = list(braceexpand('{-0..1}'))
+        self.assertEqual(result, ['0', '1'])
+
+        result = list(braceexpand('{1..-0}'))
+        self.assertEqual(result, ['1', '0'])
+
+        result = list(braceexpand('{0..-0}'))
+        self.assertEqual(result, ['0'])
 
 if __name__ == '__main__':
     unittest.main()
