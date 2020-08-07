@@ -87,11 +87,11 @@ def braceexpand(pattern, escape=True):
     UnbalancedBracesError: Unbalanced braces: '{1{2,3}'
 
     # By default, the backslash is the escape character.
-    >>> list(braceexpand(r'{1\{2,3}'))
+    >>> list(braceexpand(r'{1\\{2,3}'))
     ['1{2', '3']
 
     # Setting 'escape' to False disables backslash escaping.
-    >>> list(braceexpand(r'\{1,2}', escape=False))
+    >>> list(braceexpand(r'\\{1,2}', escape=False))
     ['\\\\1', '\\\\2']
 
     """
