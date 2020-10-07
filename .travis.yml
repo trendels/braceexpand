@@ -1,4 +1,7 @@
 language: python
+arch:
+  - AMD64
+  - ppc64le
 python:
   - "2.7"
   - "3.5"
@@ -8,4 +11,3 @@ install: true
 script: make test
 notifications:
   email: false
- 
