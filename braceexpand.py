@@ -199,8 +199,11 @@ def make_char_range(start, end, step=None):
     step = (int(step) or 1) if step else 1
     start = alphabet.index(start)
     end = alphabet.index(end)
-    return alphabet[start:end+1:step] if start < end else \
-           alphabet[start:end-1:-step]
+    if start < end:
+        return alphabet[start:end+1:step]
+    else:
+        end = end or -len(alphabet)
+        return alphabet[start:end-1:-step]
 
 
 escape_re = re.compile(r'\\(.)')

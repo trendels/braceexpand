@@ -36,6 +36,8 @@ class BraceExpand(unittest.TestCase):
             ('{,}', ['', '']),
             ('{Z..a}', ['Z', 'a']),
             ('{a..Z}', ['a', 'Z']),
+            ('{A..z}', list('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')),
+            ('{z..A}', list('zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA')),
             ('{a.{b,c}}', ['{a.b}', '{a.c}']),
             ('{a.{1..2}}', ['{a.1}', '{a.2}']),
             ('{{{,}}}', ['{{}}', '{{}}']),
