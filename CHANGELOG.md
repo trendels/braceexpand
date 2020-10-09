@@ -1,9 +1,15 @@
 # Changelog
 
+## 0.1.6 (2020-10-09)
+
+  - Fix char range ending with 'A' expanding to empty list
+  - Fix handling of character range with increment '0'
+  - Fix deprecation warnings due to invalid escape sequences.
+
 ## 0.1.5 (2019-11-27)
 
-   - Don't pad int range when start or end is '-0'
-   - Fix handling of range with increment '0'
+  - Don't pad int range when start or end is '-0'
+  - Fix handling of range with increment '0'
 
 ## 0.1.4 (2019-11-26)
 
