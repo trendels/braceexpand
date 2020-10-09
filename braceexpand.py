@@ -196,7 +196,7 @@ def make_int_range(start, end, step=None):
 
 
 def make_char_range(start, end, step=None):
-    step = int(step) if step else 1
+    step = (int(step) or 1) if step else 1
     start = alphabet.index(start)
     end = alphabet.index(end)
     return alphabet[start:end+1:step] if start < end else \
