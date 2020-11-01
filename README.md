@@ -82,5 +82,5 @@ UnbalancedBracesError: Unbalanced braces: '{1{2,3}'
 
 ## License
 
-braceexpand is licensed unter the MIT License. See the included file `LICENSE`
+braceexpand is licensed under the MIT License. See the included file `LICENSE`
 for details.

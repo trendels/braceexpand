@@ -85,7 +85,7 @@ generated from a pattern.
 License
 -------
 
-braceexpand is licensed unter the MIT License. See the included file
+braceexpand is licensed under the MIT License. See the included file
 ``LICENSE`` for details.
 
 .. |build-status-img| image:: https://travis-ci.org/trendels/braceexpand.svg
