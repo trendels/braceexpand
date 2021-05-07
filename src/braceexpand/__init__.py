@@ -4,7 +4,7 @@ import string
 import sys
 from itertools import chain, product
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
 __all__ = ['braceexpand', 'alphabet', 'UnbalancedBracesError']
 

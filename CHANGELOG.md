@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7 (2021-05-07)
+
+  - Add type annotations to braceexpand function
+
 ## 0.1.6 (2020-10-09)
 
   - Fix char range ending with 'A' expanding to empty list
