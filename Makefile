@@ -2,7 +2,7 @@ README.rst: README.md
 	pandoc --from=markdown --to=rst $< > $@
 
 test:
-	python braceexpand.py
+	python src/braceexpand/__init__.py
 	python test_braceexpand.py
 
 .PHONY: test

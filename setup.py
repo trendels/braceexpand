@@ -1,8 +1,9 @@
+import os
 import re
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
-with open('braceexpand.py') as f:
+with open(os.path.join('src', 'braceexpand', '__init__.py')) as f:
     version = re.findall(r"^__version__ = '(.*)'", f.read(), re.M)[0]
 
 with open('README.rst') as f:
@@ -13,7 +14,6 @@ setup(
     version=version,
     author='Stanis Trendelenburg',
     author_email='stanis.trendelenburg@gmail.com',
-    py_modules=['braceexpand'],
     url='https://github.com/trendels/braceexpand',
     license='MIT',
     description='Bash-style brace expansion for Python',
@@ -24,4 +24,7 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
     ],
+    package_dir={'': 'src'},
+    packages=find_packages('src'),
+    include_package_data=True,
 )
