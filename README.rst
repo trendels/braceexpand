@@ -1,7 +1,7 @@
 Bash-style brace expansion for Python
 =====================================
 
-|build-status-img|
+|build-status-img| |PyPI|
 
 Implements Brace Expansion as described in
 `bash(1) <http://man7.org/linux/man-pages/man1/bash.1.html#EXPANSION>`__,
@@ -90,3 +90,5 @@ braceexpand is licensed under the MIT License. See the included file
 
 .. |build-status-img| image:: https://travis-ci.org/trendels/braceexpand.svg
    :target: https://travis-ci.org/trendels/braceexpand
+.. |PyPI| image:: https://img.shields.io/pypi/v/braceexpand
+   :target: https://pypi.python.org/pypi/braceexpand

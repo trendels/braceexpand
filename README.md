@@ -1,6 +1,7 @@
 # Bash-style brace expansion for Python
 
 [![build-status-img]][build-status-url]
+[![PyPI](https://img.shields.io/pypi/v/braceexpand)](https://pypi.python.org/pypi/braceexpand)
 
 Implements Brace Expansion as described in [bash(1)][1], with the following
 limitations:
