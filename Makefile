@@ -1,3 +1,5 @@
+all: typecheck test README.rst
+
 README.rst: README.md
 	pandoc --from=markdown --to=rst $< > $@
 
@@ -8,4 +10,7 @@ test:
 	python src/braceexpand/__init__.py
 	python test_braceexpand.py
 
-.PHONY: test
+typecheck:
+	mypy --strict src/braceexpand/__init__.py
+
+.PHONY: all test typecheck
