@@ -3,6 +3,7 @@ import re
 import string
 import sys
 from itertools import chain, product
+from typing import Iterable, Iterator, List, Optional
 
 __version__ = '0.1.7'
 
@@ -23,6 +24,7 @@ escape_re = re.compile(r'\\(.)')
 
 
 def braceexpand(pattern, escape=True):
+    # type: (str, bool) -> Iterator[str]
     """braceexpand(pattern) -> iterator over generated strings
 
     Returns an iterator over the strings resulting from brace expansion
@@ -100,11 +102,12 @@ def braceexpand(pattern, escape=True):
 
 
 def parse_pattern(pattern, escape):
+    # type: (str, bool) -> Iterator[str]
     # pattern -> product(*parts)
     start = 0
     pos = 0
     bracketdepth = 0
-    items = []
+    items = []  # type: List[Iterable[str]]
 
     #print 'pattern:', pattern
     while pos < len(pattern):
@@ -141,6 +144,7 @@ def parse_pattern(pattern, escape):
 
 
 def parse_expression(expr, escape):
+    # type: (str, bool) -> Optional[Iterable[str]]
     int_range_match = int_range_re.match(expr)
     if int_range_match:
         return make_int_range(*int_range_match.groups())
@@ -153,11 +157,12 @@ def parse_expression(expr, escape):
 
 
 def parse_sequence(seq, escape):
+    # type: (str, bool) -> Optional[Iterator[str]]
     # sequence -> chain(*sequence_items)
     start = 0
     pos = 0
     bracketdepth = 0
-    items = []
+    items = []  # type: List[Iterable[str]]
 
     #print 'sequence:', seq
     while pos < len(seq):
@@ -184,6 +189,7 @@ def parse_sequence(seq, escape):
 
 
 def make_int_range(left, right, incr=None):
+    # type: (str, str, Optional[str]) -> Iterator[str]
     if any([s.startswith(('0', '-0'))
             for s in (left, right) if s not in ('0', '-0')]):
         padding = max(len(left), len(right))
@@ -199,6 +205,7 @@ def make_int_range(left, right, incr=None):
 
 
 def make_char_range(left, right, incr=None):
+    # type: (str, str, Optional[str]) -> str
     step = (int(incr) or 1) if incr else 1
     start = alphabet.index(left)
     end = alphabet.index(right)
