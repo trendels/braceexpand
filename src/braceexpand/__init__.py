@@ -19,6 +19,7 @@ alphabet = string.ascii_uppercase + string.ascii_lowercase
 
 int_range_re = re.compile(r'^(-?\d+)\.\.(-?\d+)(?:\.\.-?(\d+))?$')
 char_range_re = re.compile(r'^([A-Za-z])\.\.([A-Za-z])(?:\.\.-?(\d+))?$')
+escape_re = re.compile(r'\\(.)')
 
 
 def braceexpand(pattern, escape=True):
@@ -95,7 +96,7 @@ def braceexpand(pattern, escape=True):
     ['\\\\1', '\\\\2']
 
     """
-    return (_flatten(t, escape) for t in parse_pattern(pattern, escape))
+    return (escape_re.sub(r'\1', s) if escape else s for s in parse_pattern(pattern, escape))
 
 
 def parse_pattern(pattern, escape):
@@ -136,7 +137,7 @@ def parse_pattern(pattern, escape):
         #print 'literal:', pattern[start:]
         items.append([pattern[start:]])
 
-    return product(*items)
+    return ("".join(item) for item in product(*items))
 
 
 def parse_expression(expr, escape):
@@ -172,7 +173,9 @@ def parse_sequence(seq, escape):
             start = pos + 1 # skip the comma
         pos += 1
 
-    if bracketdepth != 0 or not items: # unbalanced braces or not a sequence
+    if bracketdepth != 0:
+        raise UnbalancedBracesError
+    if not items:
         return None
 
     # part after the last comma (may be the empty string)
@@ -180,42 +183,30 @@ def parse_sequence(seq, escape):
     return chain(*items)
 
 
-def make_int_range(start, end, step=None):
+def make_int_range(left, right, incr=None):
     if any([s.startswith(('0', '-0'))
-            for s in (start, end) if s not in ('0', '-0')]):
-        padding = max(len(start), len(end))
+            for s in (left, right) if s not in ('0', '-0')]):
+        padding = max(len(left), len(right))
     else:
         padding = 0
-    step = (int(step) or 1) if step else 1
-    start = int(start)
-    end = int(end)
+    step = (int(incr) or 1) if incr else 1
+    start = int(left)
+    end = int(right)
     r = xrange(start, end+1, step) if start < end else \
         xrange(start, end-1, -step)
     fmt = '%0{}d'.format(padding)
     return (fmt % i for i in r)
 
 
-def make_char_range(start, end, step=None):
-    step = (int(step) or 1) if step else 1
-    start = alphabet.index(start)
-    end = alphabet.index(end)
+def make_char_range(left, right, incr=None):
+    step = (int(incr) or 1) if incr else 1
+    start = alphabet.index(left)
+    end = alphabet.index(right)
     if start < end:
         return alphabet[start:end+1:step]
     else:
         end = end or -len(alphabet)
         return alphabet[start:end-1:-step]
-
-
-escape_re = re.compile(r'\\(.)')
-
-def _flatten(t, escape):
-    l = []
-    for item in t:
-        if isinstance(item, tuple): l.extend(_flatten(item, escape))
-        else: l.append(item)
-    s = ''.join(l)
-    # Strip escape characters from generated strings after expansion.
-    return escape_re.sub(r'\1', s) if escape else s
 
 
 if __name__ == '__main__':
